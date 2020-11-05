@@ -162,12 +162,24 @@ def page_scrape(page_url):
 
     
 if __name__ == "__main__":
-    url = "https://yts-subs.com/browse?page=2"
-    page_meta_data = page_scrape(url)
+    import re
+    import time
+    import os
 
-    #url = "https://yts-subs.com/movie-imdb/tt0034167"
-    subtitle_page_scrape(page_meta_data[0].SubtitleScrapeLink, page_meta_data[0])
+    out_dir = "/tmp/subtitle_data/"
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+    for i in range(1,900):
+        url = f"https://yts-subs.com/browse?page={i}"
+        page_meta_data = page_scrape(url)
 
-    print(page_meta_data[0])
-
-    dump_meta_data_to_xml(page_meta_data[0], "/tmp/1.xml")
+        #url = "https://yts-subs.com/movie-imdb/tt0034167"
+        for page_meta in page_meta_data:
+            subtitle_page_scrape(page_meta.SubtitleScrapeLink, page_meta_data[0])
+            print(page_meta.MediaTitle)
+            out_id = re.sub('\W', '', page_meta.MediaTitle)
+            imdb_id = page_meta.ImdbUrl.split('/')[-1]
+            out_xml = "/tmp/subtitle_data/" + out_id + "_" + imdb_id +".xml"
+            
+            dump_meta_data_to_xml(page_meta_data[0], "/tmp/1.xml")
+            time.sleep(2)
