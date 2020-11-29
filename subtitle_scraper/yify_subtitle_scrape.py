@@ -57,6 +57,7 @@ def _get_imdb_url(soup):
         if a.text == "IMDB link":
             imdb_url = a.get('href')
             break
+    print(imdb_url)
     return imdb_url
 
 
@@ -165,21 +166,39 @@ if __name__ == "__main__":
     import re
     import time
     import os
-
+    import glob
+    """
+    url = "https://yts-subs.com/movie-imdb/tt5691854"
+    pm = MetaData()
+    subtitle_page_scrape(url, pm)
+    print(pm.SubtitleUrl)
+    """
     out_dir = "/tmp/subtitle_data/"
+    all_existing_files = glob.glob(out_dir+'*')
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
-    for i in range(1,900):
-        url = f"https://yts-subs.com/browse?page={i}"
+    for i in range(430,665):
+        url = f"https://yts-subs.com/language/english?page={i}"
+        #url = f"https://yts-subs.com/browse?page={i}"
         page_meta_data = page_scrape(url)
 
         #url = "https://yts-subs.com/movie-imdb/tt0034167"
         for page_meta in page_meta_data:
-            subtitle_page_scrape(page_meta.SubtitleScrapeLink, page_meta_data[0])
-            print(page_meta.MediaTitle)
+            print(f"****** pg{i}", page_meta.SubtitleScrapeLink)
             out_id = re.sub('\W', '', page_meta.MediaTitle)
-            imdb_id = page_meta.ImdbUrl.split('/')[-1]
-            out_xml = "/tmp/subtitle_data/" + out_id + "_" + imdb_id +".xml"
-            
-            dump_meta_data_to_xml(page_meta_data[0], "/tmp/1.xml")
-            time.sleep(2)
+            out_xml = out_dir + out_id
+            existing_xml = list(filter(lambda xml: xml.startswith(out_xml), all_existing_files))
+            if len(existing_xml) > 0:
+                print(f"{page_meta.MediaTitle} exists", len(existing_xml))
+                continue
+
+            try:
+                subtitle_page_scrape(page_meta.SubtitleScrapeLink, page_meta)
+                imdb_id = page_meta.ImdbUrl.split('/')[-1]
+                out_xml = out_xml + "_" + imdb_id +".xml"
+                
+                print("%%%%%%%%%%%%%", page_meta.SubtitleUrl)
+                dump_meta_data_to_xml(page_meta, out_xml)
+                time.sleep(2)
+            except Exception as e:
+                 pass
